@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Düğün Davetiyesi</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0; padding: 0;
+  background: #faf7f4; color: #333;
+}
+.page {
+  display: none;
+  min-height: 100vh;
+  padding: 20px;
+  text-align: center;
+}
+.page.active { display: block; }
+button {
+  background: #d4a373; color: white;
+  padding: 12px 20px;
+  border: none; border-radius: 8px;
+  cursor: pointer; font-size: 16px;
+}
+input {
+  padding: 10px; margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px; width: 80%;
+}
+img {
+  max-width: 100%; border-radius: 10px;
+}
+.map-container {
+  width: 100%; height: 300px; margin-top: 15px;
+}
+</style>
+</head>
+<body>
+
+<!-- 1️⃣ Kapak Sayfası -->
+<div class="page active" id="page1">
+  <h1>💍 Düğünümüze Davetlisiniz 💍</h1>
+  <p>Mutlu günümüzde sizleri aramızda görmekten onur duyarız.</p>
+  <p><strong>25 Ekim 2025 - Saat 19:00</strong></p>
+  <button onclick="nextPage(2)">Devam Et</button>
+</div>
+
+<!-- 2️⃣ Katılım Durumu -->
+<div class="page" id="page2">
+  <h2>Katılabilecek misiniz?</h2>
+  <input type="text" id="guestName" placeholder="Adınız Soyadınız"><br>
+  <div style="margin-top:15px;">
+    <button onclick="setAttendance(true)">Evet</button>
+    <button onclick="setAttendance(false)">Hayır</button>
+  </div>
+</div>
+
+<!-- 3️⃣ Katılım Detayları -->
+<div class="page" id="page3">
+  <h2>Katılım Bilgileri</h2>
+  <input type="number" id="guestCount" placeholder="Kaç kişi katılacaksınız?"><br>
+  <input type="text" id="plateNumber" placeholder="Araç plakanız"><br>
+  <button style="margin-top:15px;" onclick="submitForm()">Gönder</button>
+</div>
+
+<!-- 4️⃣ Teşekkür + Harita -->
+<div class="page" id="page4">
+  <h2>Teşekkürler! 🎉</h2>
+  <p>Bilgileriniz alınmıştır.</p>
+  <p>Düğün Konumu:</p>
+  <div class="map-container">
+    <!-- Google Maps iframe -->
+    <iframe 
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3872.2517832598!2d32.72085521137978!3d39.93604765501211!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14d3481b5ef1dc47%3A0x981ecad1700e7def!2sGEST%20SOSYAL%20TES%C4%B0SLER%C4%B0!5e0!3m2!1str!2str!4v1754820826565!5m2!1str!2str" 
+      width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+    </iframe>
+  </div>
+  <p style="margin-top:15px;">Mekan Fotoğrafı:</p>
+  <img src="https://drive.google.com/uc?export=view&id=1AEo80qnG9lwdMb4jQyzm7qld9BrMNu-B" alt="Düğün Mekanı">
+</div>
+
+<script>
+// AYARLAR
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbw9nH8P6-Gir7IJvSVDXTy_tJthatlcGPqBaEBFbBU1Sf3AdODqrc526fgW1KjHaDl7bQ/exec"; // Örn: https://script.google.com/macros/s/.../exec
+
+let formData = { name: "", attending: "", count: "", plate: "" };
+
+function nextPage(pageNum) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page'+pageNum).classList.add('active');
+}
+
+function setAttendance(isAttending) {
+  const name = document.getElementById('guestName').value.trim();
+  if (!name) {
+    alert("Lütfen adınızı yazın.");
+    return;
+  }
+  formData.name = name;
+  formData.attending = isAttending ? "Evet" : "Hayır";
+
+  if (isAttending) {
+    nextPage(3);
+  } else {
+    // Hayır cevabını direkt gönder
+    formData.count = "0";
+    formData.plate = "-";
+    submitForm();
+  }
+}
+
+function submitForm() {
+  if (formData.attending === "Evet") {
+    const count = document.getElementById('guestCount').value.trim();
+    const plate = document.getElementById('plateNumber').value.trim();
+    if (!count) {
+      alert("Lütfen kaç kişi katılacağınızı yazın.");
+      return;
+    }
+    formData.count = count;
+    formData.plate = plate || "-";
+  }
+
+  // Google Sheets'e gönder
+  fetch(ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData)
+  })
+  .then(res => res.json())
+  .then(data => {
+    nextPage(4);
+  })
+  .catch(err => {
+    alert("Gönderilirken hata oluştu.");
+    console.error(err);
+  });
+}
+</script>
+
+</body>
+</html>
