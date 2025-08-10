@@ -1,2 +1,0 @@
-# dugun-davetiye
-# dugun-davetiye
